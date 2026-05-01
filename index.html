@@ -2,219 +2,198 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Choice Adventure</title>
+<title>放課後の学校</title>
 
 <!-- ドット絵フォント -->
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
-  body {
-    margin: 0;
-    background: #000;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 12px;
-    color: #eee;
-  }
+/* ===== 全体 ===== */
+body {
+  margin: 0;
+  background: black;
+  font-family: 'Press Start 2P', monospace;
+  color: white;
+}
 
-  .bg {
-    min-height: 100vh;
-    background-size: cover;
-    background-position: center;
-    display: flex;
-    justify-content: center;
-    padding-top: 40px;
-  }
+/* ===== 背景 ===== */
+#bg {
+  width: 100vw;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  .game {
-    width: 620px;
-    background: rgba(0,0,0,0.85);
-    border: 2px solid #666;
-    padding: 20px;
-  }
+/* 暗転 */
+.fade {
+  animation: fadeout 1.5s forwards;
+}
+@keyframes fadeout {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 
-  h1 {
-    text-align: center;
-    font-size: 14px;
-    margin-bottom: 20px;
-  }
+/* ===== ゲーム画面 ===== */
+#game {
+  width: 80%;
+  max-width: 600px;
+  background: rgba(0,0,0,0.7);
+  border: 2px solid #888;
+  padding: 16px;
+}
 
-  .text {
-    min-height: 120px;
-    line-height: 1.8;
-    margin-bottom: 20px;
-    white-space: pre-line;
-  }
+/* ===== ストーリー ===== */
+#story {
+  font-size: 12px;
+  line-height: 1.8;
+  margin-bottom: 16px;
+  white-space: pre-line;
+}
 
-  .choices button {
-    width: 100%;
-    margin: 6px 0;
-    padding: 12px;
-    background: #111;
-    color: #fff;
-    border: 2px solid #888;
-    cursor: pointer;
-    font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-  }
+/* ===== 選択肢 ===== */
+#choices button {
+  width: 100%;
+  margin: 6px 0;
+  padding: 12px;
+  background: #111;
+  color: white;
+  border: 2px solid #666;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+}
 
-  .choices button:hover {
-    background: #333;
-    border-color: #fff;
-  }
+#choices button:hover {
+  background: #333;
+  border-color: white;
+}
 
-  .guide {
-    margin-top: 18px;
-    padding: 12px;
-    border: 2px solid;
-    background: #000;
-    font-size: 10px;
-    line-height: 1.6;
-    min-height: 50px;
-    white-space: pre-line;
-  }
+/* ===== チュートリアル ===== */
+#guide {
+  margin-top: 12px;
+  padding: 10px;
+  border: 2px solid #555;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* 画面端用 */
+#guide.edge {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  width: 220px;
+  opacity: 0.6;
+}
 </style>
 </head>
 
 <body>
-
-<div class="bg" id="bg">
-  <div class="game">
-    <h1>CHOICE ADVENTURE</h1>
-    <div class="text" id="story"></div>
-    <div class="choices" id="choices"></div>
-    <div class="guide" id="guide"></div>
+<div id="bg">
+  <div id="game">
+    <div id="story"></div>
+    <div id="choices"></div>
+    <div id="guide"></div>
   </div>
 </div>
 
 <script>
-// =======================
-// フラグ
-// =======================
-let memory = false;
+let quitOnce = false;
 
-// =======================
-// 文字を少し壊す演出
-// =======================
-function glitch(text) {
-  const chars = "!@#$%^&*?";
-  return text.replace(/./g, c =>
-    Math.random() < 0.06 ? chars[Math.floor(Math.random()*chars.length)] : c
-  );
-}
-
-// =======================
-// シーン定義
-// =======================
+/* ===== シーン定義 ===== */
 const scenes = {
-  1: {
+  0: {
     text: "ホウカゴノ ガッコウ。\nダレモ イナイ。",
-    guide: "ボタンヲ エランデ クダサイ。",
-    color: "#4da6ff",
+    guide: "",
+    edgeGuide: false,
     bg: "images/school.jpg",
+    choices: () => {
+      if (quitOnce) {
+        return [
+          { label: "ゲームを始める", next: 1 }
+        ];
+      }
+      return [
+        { label: "ゲームを始める", next: 1 },
+        { label: "ゲームをやめる", next: "quit" }
+      ];
+    }
+  },
+
+  1: {
+    text: "ホウカゴノ ガッコウ。\nナゼカ ダレモ イナイ。\nアタリハ ヒガ オチテキタ。",
+    guide: "センタクシヲ エラビ、\nゲームヲ ススメマショウ。",
+    edgeGuide: true,
+    bg: "images/school_evening.jpg",
     choices: [
-      { label: "コエヲ サガス", next: 2 },
-      { label: "カエル", next: 5 }
+      { label: "アタリヲ ミワタス", next: 2 }
     ]
   },
 
   2: {
-    text: "キョウシツ。\nコクバンニ モジガ アル。\n「――オモイダシテ」",
-    guide: "ヨク デキマシタ。\nシラベテ ミマショウ。",
-    color: "#f0c674",
-    bg: "images/classroom.jpg",
+    text: "オクノ キョウシツカラ\nモノオトガ シタ。\nダレカ イルノダロウカ。\nノゾキニ イコウカナ。",
+    guide: "センタクシヲ エラビ、\nゲームヲ ススメマショウ。",
+    edgeGuide: true,
+    bg: "images/hallway.jpg",
     choices: [
-      { label: "コクバンヲ シラベル", next: 3 },
-      { label: "ロウカニ デル", next: 4 }
+      { label: "オクニ ススム", next: 3 }
     ]
   },
 
   3: {
-    text: "アタマノ オクデ、\nナニカガ メザメル。",
-    guide: "……\nソレデ イイ。",
-    color: "#ff9933",
-    bg: "images/classroom.jpg",
-    effect: () => { memory = true; },
-    choices: [
-      { label: "ロウカニ デル", next: 4 }
-    ]
-  },
-
-  4: {
-    text: "ロウカノ オク。\nアカイ トビラ。",
-    guide: "ススムベキ デス。",
-    color: "#ff5555",
-    bg: "images/hallway.jpg",
-    choices: [
-      { label: "トビラヲ アケル", next: () => memory ? 6 : 7 },
-      { label: "ヒキカエス", next: 5 }
-    ]
-  },
-
-  5: {
-    text: "ナニモ オコラナカッタ。\nヘイボンナ マイニチ。",
-    guide: "……",
-    color: "#666",
-    bg: "images/school.jpg",
-    choices: [
-      { label: "モドル", next: 1 }
-    ]
-  },
-
-  6: {
-    text: "「オモイダシタネ。」\n「デモ モウ オソイ。」",
-    guide: glitch("アリガトウ。\nコレデ カンセイ。"),
-    color: "#ff0000",
+    text: "……",
+    guide: "ヨク デキマシタ。",
+    edgeGuide: false,
     bg: "images/dark.jpg",
-    choices: [
-      { label: "タイトルへ", next: 1 }
-    ]
-  },
-
-  7: {
-    text: "トビラノ サキハ カラッポダッタ。",
-    guide: glitch("ソレデ ヨカッタノニ。"),
-    color: "#aa0000",
-    bg: "images/dark.jpg",
-    choices: [
-      { label: "タイトルへ", next: 1 }
-    ]
+    choices: []
   }
 };
 
-// =======================
-// 表示処理
-// =======================
+/* ===== 表示処理 ===== */
 function showScene(id) {
   const scene = scenes[id];
-
-  document.getElementById("bg").style.backgroundImage =
-    `url('${scene.bg}')`;
-
-  document.getElementById("story").innerText = scene.text;
-
-  if (scene.effect) scene.effect();
-
+  const bg = document.getElementById("bg");
+  const story = document.getElementById("story");
   const guide = document.getElementById("guide");
-  guide.innerText = scene.guide;
-  guide.style.color = scene.color;
-  guide.style.borderColor = scene.color;
-
   const choicesDiv = document.getElementById("choices");
+
+  bg.style.backgroundImage = `url('${scene.bg}')`;
+  story.innerText = scene.text;
+
+  guide.innerText = scene.guide || "";
+  guide.className = scene.edgeGuide ? "edge" : "";
+
   choicesDiv.innerHTML = "";
 
-  scene.choices.forEach(c => {
+  const choices =
+    typeof scene.choices === "function"
+      ? scene.choices()
+      : scene.choices;
+
+  choices.forEach(c => {
     const btn = document.createElement("button");
     btn.innerText = c.label;
     btn.onclick = () => {
-      const next = typeof c.next === "function" ? c.next() : c.next;
-      showScene(next);
+      if (c.next === "quit") {
+        quitOnce = true;
+        bg.classList.add("fade");
+        setTimeout(() => {
+          bg.classList.remove("fade");
+          showScene(0);
+        }, 1500);
+      } else {
+        showScene(c.next);
+      }
     };
     choicesDiv.appendChild(btn);
   });
 }
 
-showScene(1);
+/* ===== 開始 ===== */
+showScene(0);
 </script>
-
 </body>
 </html>
