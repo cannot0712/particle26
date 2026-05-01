@@ -2,161 +2,149 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Mouse & Cheese Simulation</title>
+<title>Choice Adventure Demo</title>
 <style>
-    body {
-        margin: 0;
-        overflow: hidden;
-        background: #111;
-    }
-    canvas {
-        display: block;
-    }
+  body {
+    background: #111;
+    color: #eee;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+  }
+  .game {
+    width: 600px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  .text {
+    min-height: 120px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .choices button {
+    width: 100%;
+    margin: 5px 0;
+    padding: 10px;
+    background: #333;
+    color: #eee;
+    border: 1px solid #555;
+    cursor: pointer;
+  }
+  .choices button:hover {
+    background: #444;
+  }
+  .guide {
+    margin-top: 15px;
+    padding: 10px;
+    border: 1px solid;
+    font-size: 14px;
+  }
 </style>
 </head>
-<body>
 
-<canvas id="canvas"></canvas>
+<body>
+<div class="game">
+  <h1>Choice Adventure</h1>
+
+  <div class="text" id="story"></div>
+
+  <div class="choices" id="choices"></div>
+
+  <div class="guide" id="guide"></div>
+</div>
 
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+const scenes = {
+  1: {
+    text: "放課後の学校。\nなぜか今日は、誰もいない。\n帰ろうとしたその時、声が聞こえた。",
+    guide: "落ち着いて。\n画面の選択肢を選べば進めます。",
+    color: "#4da6ff",
+    choices: [
+      { label: "声の正体を探す", next: 2 },
+      { label: "無視して帰る", next: 5 }
+    ]
+  },
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+  2: {
+    text: "教室の黒板に、\n見覚えのない文字が書かれている。\n「――思い出して」",
+    guide: "いい選択ですね。\nそのまま進めば大丈夫です。",
+    color: "#f0c674",
+    choices: [
+      { label: "黒板を調べる", next: 3 },
+      { label: "廊下に出る", next: 4 }
+    ]
+  },
 
-let particles = [];
-const PARTICLE_COUNT = 120;
+  3: {
+    text: "黒板に触れた瞬間、\n忘れていた記憶がよみがえった。",
+    guide: "……そう。\nそれでいい。",
+    color: "#ff9933",
+    choices: [
+      { label: "廊下に出る", next: 4 }
+    ]
+  },
 
-// マウス（カーソル）
-const cursor = { x: null, y: null };
+  4: {
+    text: "廊下の奥に、\n見慣れない扉がある。",
+    guide: "ここまで来たのなら、\n進むべきです。",
+    color: "#ff5555",
+    choices: [
+      { label: "扉を開ける", next: 6 },
+      { label: "引き返す", next: 5 }
+    ]
+  },
 
-// ネズミ（自動で動く）
-const mouseChar = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    vx: 2,
-    vy: 1.5,
-    size: 20
+  5: {
+    text: "あなたは学校を後にした。\n何事もなかったかのように日常は続く。",
+    guide: "……",
+    color: "#666",
+    choices: [
+      { label: "最初から", next: 1 }
+    ]
+  },
+
+  6: {
+    text: "「そう、気づいてしまったね。」\n「私は、案内していただけ。」\nすべては、最初から決まっていた。",
+    guide: "ありがとう。\n最高の選択だった。",
+    color: "#ff0000",
+    choices: [
+      { label: "タイトルへ戻る", next: 1 }
+    ]
+  }
 };
 
-window.addEventListener("mousemove", (e) => {
-    cursor.x = e.x;
-    cursor.y = e.y;
-});
+let current = 1;
 
-window.addEventListener("resize", () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
+function showScene(id) {
+  const scene = scenes[id];
+  current = id;
 
-// チーズ粒
-class Particle {
-    constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.baseX = this.x;
-        this.baseY = this.y;
+  document.getElementById("story").innerText = scene.text;
 
-        this.size = Math.random() * 6 + 6;
-        this.density = Math.random() * 30 + 1;
-    }
+  const guide = document.getElementById("guide");
+  guide.innerText = "案内人：\n" + scene.guide;
+  guide.style.borderColor = scene.color;
+  guide.style.color = scene.color;
 
-    draw() {
-        ctx.fillStyle = "#FFD84D"; // チーズ色
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-        ctx.fill();
-    }
+  const choicesDiv = document.getElementById("choices");
+  choicesDiv.innerHTML = "";
 
-    attract(targetX, targetY, strength) {
-        let dx = targetX - this.x;
-        let dy = targetY - this.y;
-        let distance = Math.sqrt(dx * dx + dy * dy);
-
-        let maxDistance = 150;
-
-        if (distance < maxDistance && distance > 0) {
-            let force = (maxDistance - distance) / maxDistance;
-            this.x += (dx / distance) * force * this.density * strength;
-            this.y += (dy / distance) * force * this.density * strength;
-        }
-    }
-
-    update() {
-        // カーソルに引き寄せ
-        if (cursor.x !== null) {
-            this.attract(cursor.x, cursor.y, 0.3);
-        }
-
-        // ネズミに引き寄せ（強め）
-        this.attract(mouseChar.x, mouseChar.y, 0.5);
-
-        // 元の位置に戻る
-        let dx = this.baseX - this.x;
-        let dy = this.baseY - this.y;
-        this.x += dx * 0.02;
-        this.y += dy * 0.02;
-
-        this.draw();
-    }
+  scene.choices.forEach(c => {
+    const btn = document.createElement("button");
+    btn.innerText = c.label;
+    btn.onclick = () => showScene(c.next);
+    choicesDiv.appendChild(btn);
+  });
 }
 
-// 初期化
-function init() {
-    particles = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-        particles.push(new Particle());
-    }
-}
-
-// ネズミ描画（簡易）
-function drawMouse() {
-    ctx.fillStyle = "#ccc";
-    ctx.beginPath();
-    ctx.arc(mouseChar.x, mouseChar.y, mouseChar.size, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 耳
-    ctx.beginPath();
-    ctx.arc(mouseChar.x - 10, mouseChar.y - 15, 8, 0, Math.PI * 2);
-    ctx.arc(mouseChar.x + 10, mouseChar.y - 15, 8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 目
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(mouseChar.x - 5, mouseChar.y - 3, 2, 0, Math.PI * 2);
-    ctx.arc(mouseChar.x + 5, mouseChar.y - 3, 2, 0, Math.PI * 2);
-    ctx.fill();
-}
-
-// ネズミ移動
-function updateMouse() {
-    mouseChar.x += mouseChar.vx;
-    mouseChar.y += mouseChar.vy;
-
-    // 壁でバウンド
-    if (mouseChar.x < 0 || mouseChar.x > canvas.width) mouseChar.vx *= -1;
-    if (mouseChar.y < 0 || mouseChar.y > canvas.height) mouseChar.vy *= -1;
-}
-
-// アニメーション
-function animate() {
-    ctx.fillStyle = "rgba(0,0,0,0.2)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    updateMouse();
-    drawMouse();
-
-    particles.forEach(p => p.update());
-
-    requestAnimationFrame(animate);
-}
-
-init();
-animate();
+showScene(current);
 </script>
-
 </body>
 </html>
