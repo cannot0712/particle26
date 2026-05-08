@@ -3,268 +3,913 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>推しは今日も、嘘をつく。</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:black;color:white;font-family:"Yu Gothic",sans-serif;overflow:hidden;}
-#game{width:100vw;height:100vh;position:relative;}
 
-#bg{
-    position:absolute;inset:0;
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:black;
+    overflow:hidden;
+    font-family:"Yu Gothic",sans-serif;
+    color:white;
+}
+
+#game{
+    width:100vw;
+    height:100vh;
+    position:relative;
+}
+
+/* 背景 */
+
+#background{
+    position:absolute;
+    inset:0;
     background-size:cover;
     background-position:center;
-    filter:brightness(.45);
     transition:1s;
+    filter:brightness(.4);
 }
+
+/* 暗幕 */
+
 #overlay{
-    position:absolute;inset:0;
-    background:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.85));
+    position:absolute;
+    inset:0;
+    background:linear-gradient(
+        rgba(0,0,0,.15),
+        rgba(0,0,0,.8)
+    );
+}
+
+/* タイトル */
+
+#titleScreen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:20;
+    background:black;
 }
 
 #title{
-    position:absolute;inset:0;
-    display:flex;flex-direction:column;
-    justify-content:center;align-items:center;
-    background:black;z-index:10;
+    font-size:60px;
+    letter-spacing:4px;
+    margin-bottom:15px;
 }
-#title h1{font-size:56px;margin-bottom:20px;}
-#title p{opacity:.7;margin-bottom:40px;}
+
+#subtitle{
+    opacity:.7;
+    margin-bottom:40px;
+}
 
 button{
-    background:#ff4fa3;color:white;border:none;
-    padding:14px 30px;border-radius:10px;
-    font-size:18px;cursor:pointer;
+    background:#ff4fa3;
+    color:white;
+    border:none;
+    padding:14px 28px;
+    border-radius:10px;
+    cursor:pointer;
+    font-size:18px;
+    transition:.2s;
 }
 
-#ui{display:none;}
+button:hover{
+    transform:scale(1.05);
+}
+
+/* UI */
+
+#ui{
+    display:none;
+}
+
+/* ステータス */
+
 #stats{
-    position:absolute;top:15px;left:15px;
+    position:absolute;
+    top:15px;
+    left:15px;
     background:rgba(0,0,0,.5);
-    padding:12px;border-radius:10px;
+    padding:12px;
+    border-radius:10px;
+    z-index:5;
     line-height:1.8;
 }
-#box{
-    position:absolute;bottom:0;width:100%;
-    background:rgba(0,0,0,.85);
-    padding:28px;
-}
-#name{color:#ff7bc0;font-weight:bold;margin-bottom:10px;font-size:22px;}
-#text{min-height:140px;font-size:20px;line-height:2;white-space:pre-wrap;cursor:pointer;}
-#choices{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
-.choice{background:#1d1d1d;border:1px solid #ff4fa3;text-align:left;}
 
-#end{
-    position:absolute;inset:0;background:black;
-    display:none;flex-direction:column;
-    justify-content:center;align-items:center;
-    text-align:center;padding:40px;
+/* テキストボックス */
+
+#textbox{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    background:rgba(0,0,0,.82);
+    padding:28px;
+    z-index:10;
 }
-#end h1{color:#ff7bc0;font-size:48px;margin-bottom:25px;}
+
+#name{
+    color:#ff7bc0;
+    font-size:22px;
+    margin-bottom:10px;
+    font-weight:bold;
+}
+
+#text{
+    min-height:140px;
+    line-height:2;
+    font-size:20px;
+    white-space:pre-wrap;
+    cursor:pointer;
+}
+
+/* 選択肢 */
+
+#choices{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.choice{
+    background:#1d1d1d;
+    border:1px solid #ff4fa3;
+    text-align:left;
+}
+
+/* ▼ */
+
+#next{
+    position:absolute;
+    right:30px;
+    bottom:20px;
+    font-size:20px;
+    opacity:0;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    0%{opacity:0}
+    50%{opacity:1}
+    100%{opacity:0}
+}
+
+/* END */
+
+#ending{
+    position:absolute;
+    inset:0;
+    background:black;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    text-align:center;
+    padding:40px;
+    z-index:50;
+}
+
+#ending h1{
+    color:#ff7bc0;
+    font-size:52px;
+    margin-bottom:25px;
+}
+
+#ending p{
+    max-width:700px;
+    line-height:2;
+}
+
+/* 演出 */
+
+.fade{
+    animation:fade .8s;
+}
+
+@keyframes fade{
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.glitch{
+    animation:glitch .1s infinite;
+}
+
+@keyframes glitch{
+    0%{transform:translate(0)}
+    25%{transform:translate(-2px,2px)}
+    50%{transform:translate(2px,-2px)}
+    75%{transform:translate(-1px,1px)}
+}
+
 </style>
 </head>
-
 <body>
+
 <div id="game">
-    <div id="bg"></div>
+
+    <!-- 背景 -->
+    <div id="background"></div>
     <div id="overlay"></div>
 
-    <div id="title">
-        <h1>推しは今日も、嘘をつく。</h1>
-        <p>コンカフェ嬢ADV</p>
-        <button onclick="start()">GAME START</button>
+    <!-- タイトル -->
+    <div id="titleScreen">
+
+        <div id="title">推しは今日も、嘘をつく。</div>
+        <div id="subtitle">コンカフェ嬢攻略ADV</div>
+
+        <button onclick="startGame()">GAME START</button>
+
     </div>
 
+    <!-- UI -->
     <div id="ui">
+
+        <!-- ステータス -->
         <div id="stats">
             好感度：<span id="love">0</span><br>
             依存度：<span id="depend">0</span><br>
             現実性：<span id="reality">0</span>
         </div>
 
-        <div id="box">
+        <!-- テキスト -->
+        <div id="textbox">
+
             <div id="name"></div>
+
             <div id="text"></div>
+
             <div id="choices"></div>
+
+            <div id="next">▼</div>
+
         </div>
+
     </div>
 
-    <div id="end">
-        <h1 id="endTitle"></h1>
-        <p id="endText"></p><br><br>
-        <button onclick="location.reload()">タイトルへ</button>
+    <!-- END -->
+    <div id="ending">
+
+        <h1 id="endingTitle"></h1>
+
+        <p id="endingText"></p>
+
+        <br><br>
+
+        <button onclick="location.reload()">タイトルへ戻る</button>
+
     </div>
+
 </div>
 
 <script>
-/* ===== 状態 ===== */
-let love=0, depend=0, reality=0;
-let s=0, p=0;
 
-/* ===== 背景 ===== */
-const bgm={
-    street:"3E5432C3-2703-472D-B465-6F16FEE1B8F5.jpeg",
-    cafe:"E7514306-6E15-4518-9346-DA02725635F8.png",
-    night:"828769FF-5428-48F6-9EF8-B424A98445AC.jpeg",
-    station:"5E45E54D-328D-4FAE-A4C2-357E2329C720.jpeg",
-    room:"FCE43578-31A9-4071-8292-6718C43EF5F1.jpeg"
+/* ステータス */
+
+let love = 0;
+let depend = 0;
+let reality = 0;
+
+let currentScene = 0;
+let currentPage = 0;
+
+/* 要素 */
+
+const bg = document.getElementById("background");
+
+const nameEl = document.getElementById("name");
+const textEl = document.getElementById("text");
+const choicesEl = document.getElementById("choices");
+const nextEl = document.getElementById("next");
+
+const loveEl = document.getElementById("love");
+const dependEl = document.getElementById("depend");
+const realityEl = document.getElementById("reality");
+
+/* 背景 */
+
+const backgrounds = {
+
+cafe:
+"https://picsum.photos/1200/800?1",
+
+night:
+"https://picsum.photos/1200/800?2",
+
+street:
+"https://picsum.photos/1200/800?3",
+
+station:
+"https://picsum.photos/1200/800?4"
+
 };
 
-/* ===== シーン ===== */
-const scenes=[
+/* シーン */
+
+const scenes = [
+
 {
 bg:"street",
+
 pages:[
-{text:"放課後の繁華街。\n少しだけ、寄り道するつもりだった。"},
+
+{
+name:"",
+text:"ただの好奇心だった。\n少しだけ覗いてみるつもりだった。"
+},
+
+{
+name:"",
+text:"繁華街の路地裏。\n\n『Black Alice』という看板が目に入る。"
+},
+
+{
+name:"",
+text:"少しだけ。\n本当に、それだけのつもりだった。"
+},
+
 {
 name:"リリア",
-text:()=> "「はじめまして〜♡ ご主人様？」"
+text:"「はじめまして〜！新人のご主人様？」"
 }
+
 ],
+
 choices:[
-{text:"店に入る",effect:()=>love++},
-{text:"様子を見る",effect:()=>reality++}
-]
+
+{
+text:"おすすめのドリンクある？",
+effect:()=>{love+=1;}
 },
+
+{
+text:"こういう店初めてで…",
+effect:()=>{love+=1; reality+=1;}
+},
+
+{
+text:"君が一番人気？",
+effect:()=>{depend+=1;}
+}
+
+]
+
+},
+
 {
 bg:"cafe",
+
 pages:[
+
+{
+name:"",
+text:"距離が近い。"
+},
+
+{
+name:"",
+text:"でも、これが接客なんだろう。"
+},
+
 {
 name:"リリア",
-text:()=>{
-if(depend>=3) return "「また来てくれたんだ♡」";
-if(reality>=3) return "「無理してない？」";
-return "「いらっしゃいませ〜♡」";
+text:"「え〜、緊張してる？\nかわい〜♡」"
+},
+
+{
+name:"",
+text:"その笑顔が、妙に頭に残った。"
 }
-},
-{text:"距離が近い。これは、仕事だ。"}
+
 ],
+
 choices:[
-{text:"照れる",effect:()=>love++},
-{text:"冷静になる",effect:()=>reality++},
-{text:"ドキドキする",effect:()=>depend++}
-]
+
+{
+text:"少し照れる",
+effect:()=>{love+=1;}
 },
+
+{
+text:"営業上手だね",
+effect:()=>{reality+=1;}
+},
+
+{
+text:"ドキッとする",
+effect:()=>{depend+=1;}
+}
+
+]
+
+},
+
+{
+bg:"street",
+
+pages:[
+
+{
+name:"",
+text:"帰り道。"
+},
+
+{
+name:"",
+text:"スマホが震えた。"
+},
+
+{
+name:"リリア",
+text:"『今日は来てくれてありがと〜♡』"
+},
+
+{
+name:"",
+text:"たったそれだけなのに、\n少し特別になれた気がした。"
+}
+
+],
+
+choices:[
+
+{
+text:"すぐ返信する",
+effect:()=>{depend+=2;}
+},
+
+{
+text:"少し悩んで返す",
+effect:()=>{reality+=1;}
+}
+
+]
+
+},
+
 {
 bg:"night",
+
 pages:[
+
 {
 name:"リリア",
-text:()=>{
-if(depend>=4) return "『今なにしてるの？♡』";
-if(reality>=4) return "『遅いから無理しないでね』";
-return "『今日はありがとう♡』";
-}
-}
-],
-choices:[
-{text:"すぐ返す",effect:()=>depend+=2},
-{text:"少し待つ",effect:()=>reality++}
-]
+text:"『また会いたいな』"
 },
+
 {
-bg:"room",
+name:"",
+text:"“営業”。"
+},
+
+{
+name:"",
+text:"そう分かっているのに、\n期待してしまう。"
+}
+
+],
+
+choices:[
+
+{
+text:"俺も会いたい",
+effect:()=>{love+=1; depend+=1;}
+},
+
+{
+text:"ありがとう",
+effect:()=>{reality+=1;}
+}
+
+]
+
+},
+
+{
+bg:"cafe",
+
 pages:[
+
 {
-text:()=>{
-if(depend>=5) return "スマホを握ったまま、眠れなかった。";
-if(reality>=5) return "少し、距離を置くべきかもしれない。";
-return "ベッドに沈み込む。";
-}
-}
-],
-choices:[
-{text:"考えない",effect:()=>depend++},
-{text:"考える",effect:()=>reality+=2}
-]
+name:"",
+text:"気づけば、また来ていた。"
 },
+
+{
+name:"リリア",
+text:"「来てくれると思った♡」"
+},
+
+{
+name:"",
+text:"その言葉だけで、\n少し嬉しくなってしまう。"
+}
+
+],
+
+choices:[
+
+{
+text:"会いたくて",
+effect:()=>{love+=2;}
+},
+
+{
+text:"なんとなく",
+effect:()=>{reality+=1;}
+},
+
+{
+text:"他の客にも言ってる？",
+effect:()=>{depend+=1;}
+}
+
+]
+
+},
+
+{
+bg:"cafe",
+
+pages:[
+
+{
+name:"",
+text:"リリアが、別の客に笑いかけている。"
+},
+
+{
+name:"リリア",
+text:"『だいすき〜♡』"
+},
+
+{
+name:"",
+text:"胸の奥が、少しざわついた。"
+}
+
+],
+
+choices:[
+
+{
+text:"見なかったことにする",
+effect:()=>{reality+=2;}
+},
+
+{
+text:"嫉妬する",
+effect:()=>{depend+=2;}
+},
+
+{
+text:"もっと通えば変わる？",
+effect:()=>{depend+=3;}
+}
+
+]
+
+},
+
+{
+bg:"night",
+
+pages:[
+
+{
+name:"",
+text:"AM 2:43"
+},
+
+{
+name:"",
+text:"リリアから着信が来ている。"
+},
+
+{
+name:"",
+text:"心臓が少し跳ねた。"
+}
+
+],
+
+choices:[
+
+{
+text:"すぐ出る",
+effect:()=>{depend+=2; love+=1;}
+},
+
+{
+text:"少し迷う",
+effect:()=>{reality+=1;}
+},
+
+{
+text:"出ない",
+effect:()=>{reality+=2;}
+}
+
+]
+
+},
+
 {
 bg:"station",
+
 pages:[
+
 {
 name:"リリア",
-text:()=>{
-if(depend>=6) return "「ねえ…私だけ見てくれる？」";
-if(reality>=6) return "「自分の生活も大事にしてね」";
-return "「また、会えるよね？」";
+text:"「最近、来る回数減ったよね？」"
+},
+
+{
+name:"",
+text:"少し疲れている自分に気づいていた。"
+},
+
+{
+name:"",
+text:"でも、離れるのも少し怖かった。"
 }
-}
+
 ],
+
 choices:[
-{text:"うなずく",effect:()=>depend+=2},
-{text:"距離を取る",effect:()=>reality+=3}
-]
+
+{
+text:"ごめん",
+effect:()=>{love+=1;}
+},
+
+{
+text:"少し考えたくて",
+effect:()=>{reality+=3;}
+},
+
+{
+text:"嫉妬した",
+effect:()=>{depend+=2;}
 }
+
+]
+
+}
+
 ];
 
-/* ===== 開始 ===== */
-function start(){
-    title.style.display="none";
-    ui.style.display="block";
-    drawScene();
+/* 開始 */
+
+function startGame(){
+
+document.getElementById("titleScreen").style.display="none";
+
+document.getElementById("ui").style.display="block";
+
+showScene();
+
 }
 
-/* ===== 描画 ===== */
-function drawScene(){
-    const sc=scenes[s];
-    bg.style.backgroundImage=`url(${bgm[sc.bg]})`;
-    p=0;
-    drawPage();
+/* ステータス */
+
+function updateStats(){
+
+loveEl.textContent = love;
+dependEl.textContent = depend;
+realityEl.textContent = reality;
+
 }
 
-function drawPage(){
-    const page=scenes[s].pages[p];
-    name.textContent=page.name||"";
-    const msg=typeof page.text==="function"?page.text():page.text;
-    text.textContent=msg;
-    choices.innerHTML="";
-    text.onclick=()=>{
-        p++;
-        if(p>=scenes[s].pages.length){
-            text.onclick=null;
-            drawChoices();
-        }else drawPage();
-    };
+/* タイピング */
+
+function typeText(text, callback){
+
+textEl.textContent = "";
+
+let i = 0;
+
+const interval = setInterval(()=>{
+
+textEl.textContent += text[i];
+
+i++;
+
+if(i >= text.length){
+
+clearInterval(interval);
+
+nextEl.style.opacity = 1;
+
+if(callback) callback();
+
 }
 
-function drawChoices(){
-    scenes[s].choices.forEach(c=>{
-        const b=document.createElement("button");
-        b.className="choice";
-        b.textContent=c.text;
-        b.onclick=()=>{
-            c.effect();
-            update();
-            s++;
-            if(s>=scenes.length) ending();
-            else drawScene();
-        };
-        choices.appendChild(b);
-    });
+},25);
+
 }
 
-function update(){
-    love.textContent=love;
-    depend.textContent=depend;
-    reality.textContent=reality;
+/* シーン表示 */
+
+function showScene(){
+
+const scene = scenes[currentScene];
+
+bg.style.backgroundImage =
+`url(${backgrounds[scene.bg]})`;
+
+showPage();
+
 }
 
-/* ===== END ===== */
-function ending(){
-    ui.style.display="none";
-    end.style.display="flex";
+/* ページ表示 */
 
-    if(reality>=8){
-        endTitle.textContent="END：現実";
-        endText.textContent="あなたは、ちゃんと自分の生活に戻った。";
-    }else if(depend>=8){
-        endTitle.textContent="END：依存";
-        endText.textContent="彼女の言葉だけが、世界になった。";
-    }else{
-        endTitle.textContent="END：余韻";
-        endText.textContent="少し甘い記憶だけが残った。";
-    }
+function showPage(){
+
+const scene = scenes[currentScene];
+
+const page = scene.pages[currentPage];
+
+nameEl.textContent = page.name;
+
+choicesEl.innerHTML = "";
+
+nextEl.style.opacity = 0;
+
+typeText(page.text);
+
+textEl.onclick = ()=>{
+
+currentPage++;
+
+if(currentPage >= scene.pages.length){
+
+textEl.onclick = null;
+
+showChoices();
+
+}else{
+
+showPage();
+
 }
+
+};
+
+}
+
+/* 選択肢 */
+
+function showChoices(){
+
+choicesEl.innerHTML = "";
+
+const scene = scenes[currentScene];
+
+scene.choices.forEach(choice=>{
+
+const btn = document.createElement("button");
+
+btn.className = "choice fade";
+
+btn.textContent = choice.text;
+
+btn.onclick = ()=>{
+
+choice.effect();
+
+updateStats();
+
+currentScene++;
+currentPage = 0;
+
+if(depend >= 10){
+
+document.body.classList.add("glitch");
+
+}else{
+
+document.body.classList.remove("glitch");
+
+}
+
+if(currentScene >= scenes.length){
+
+showEnding();
+
+}else{
+
+showScene();
+
+}
+
+};
+
+choicesEl.appendChild(btn);
+
+});
+
+}
+
+/* END */
+
+function showEnding(){
+
+document.getElementById("ui").style.display="none";
+
+const end = document.getElementById("ending");
+
+end.style.display = "flex";
+
+const title = document.getElementById("endingTitle");
+
+const text = document.getElementById("endingText");
+
+/* TRUE */
+
+if(reality >= 8){
+
+title.textContent = "END『午前4時の改札』";
+
+text.textContent =
+`始発前の駅。
+
+「ちゃんと、自分の生活に戻ろうと思って」
+
+あなたは、
+“推し”ではなく、
+一人の女の子としてリリアを見ることにした。
+
+彼女は少しだけ寂しそうに笑った。
+
+でもその笑顔は、
+初めて“営業”じゃない気がした。`;
+
+}
+
+/* BAD */
+
+else if(depend >= 12){
+
+title.textContent = "END『次の推しへ』";
+
+text.textContent =
+`気づけば、
+感情を止められなくなっていた。
+
+独占したかった。
+
+特別になりたかった。
+
+でも、
+リリアには他にも客がいる。
+
+店を出たあと、
+ネオン街の光だけがやけに眩しかった。`;
+
+}
+
+/* HAPPY */
+
+else{
+
+title.textContent = "END『鎖越しの愛』";
+
+text.textContent =
+`「もう、他の人のところ行かないで」
+
+リリアはそう言って笑った。
+
+大学も、
+仕事も、
+少しずつ遠くなっていく。
+
+でも、
+彼女が隣にいるだけで幸せだった。`;
+
+}
+
+}
+
+updateStats();
+
 </script>
 </body>
 </html>
