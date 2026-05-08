@@ -1,199 +1,436 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>放課後の学校</title>
-
-<!-- ドット絵フォント -->
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>推しは今日も、嘘をつく。</title>
 
 <style>
-/* ===== 全体 ===== */
-body {
-  margin: 0;
-  background: black;
-  font-family: 'Press Start 2P', monospace;
-  color: white;
+body{
+    margin:0;
+    background:#0d0d0d;
+    color:white;
+    font-family:"Hiragino Sans","Yu Gothic",sans-serif;
+    overflow:hidden;
 }
 
-/* ===== 背景 ===== */
-#bg {
-  width: 100vw;
-  height: 100vh;
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+#game{
+    width:100vw;
+    height:100vh;
+    position:relative;
+    background:
+    linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.75)),
+    url('https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1200&auto=format&fit=crop');
+    background-size:cover;
+    background-position:center;
 }
 
-/* 暗転 */
-.fade {
-  animation: fadeout 1.5s forwards;
-}
-@keyframes fadeout {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-/* ===== ゲーム画面 ===== */
-#game {
-  width: 80%;
-  max-width: 600px;
-  background: rgba(0,0,0,0.7);
-  border: 2px solid #888;
-  padding: 16px;
+#titleScreen{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background:rgba(0,0,0,.65);
+    z-index:5;
 }
 
-/* ===== ストーリー ===== */
-#story {
-  font-size: 12px;
-  line-height: 1.8;
-  margin-bottom: 16px;
-  white-space: pre-line;
+#title{
+    font-size:52px;
+    margin-bottom:10px;
+    letter-spacing:3px;
 }
 
-/* ===== 選択肢 ===== */
-#choices button {
-  width: 100%;
-  margin: 6px 0;
-  padding: 12px;
-  background: #111;
-  color: white;
-  border: 2px solid #666;
-  font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
-  cursor: pointer;
+#subtitle{
+    opacity:.7;
+    margin-bottom:40px;
 }
 
-#choices button:hover {
-  background: #333;
-  border-color: white;
+button{
+    background:#ff4fa3;
+    color:white;
+    border:none;
+    padding:14px 28px;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+    transition:.2s;
 }
 
-/* ===== チュートリアル ===== */
-#guide {
-  margin-top: 12px;
-  padding: 10px;
-  border: 2px solid #555;
-  font-size: 10px;
-  line-height: 1.6;
+button:hover{
+    transform:scale(1.05);
+    background:#ff6ab3;
 }
 
-/* 画面端用 */
-#guide.edge {
-  position: fixed;
-  right: 10px;
-  bottom: 10px;
-  width: 220px;
-  opacity: 0.6;
+#ui{
+    position:absolute;
+    inset:0;
+    display:none;
+}
+
+#stats{
+    position:absolute;
+    top:15px;
+    left:15px;
+    background:rgba(0,0,0,.5);
+    padding:12px;
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.8;
+}
+
+#textbox{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    background:rgba(0,0,0,.78);
+    padding:25px;
+    box-sizing:border-box;
+}
+
+#name{
+    color:#ff7bc0;
+    font-weight:bold;
+    margin-bottom:12px;
+    font-size:20px;
+}
+
+#text{
+    min-height:90px;
+    line-height:1.8;
+    font-size:18px;
+    white-space:pre-wrap;
+}
+
+#choices{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.choice{
+    width:100%;
+    text-align:left;
+    background:#1e1e1e;
+    border:1px solid #ff4fa3;
+}
+
+#ending{
+    position:absolute;
+    inset:0;
+    background:black;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    text-align:center;
+    padding:40px;
+    box-sizing:border-box;
+    z-index:10;
+}
+
+#ending h1{
+    color:#ff7bc0;
+    font-size:52px;
+}
+
+#ending p{
+    max-width:700px;
+    line-height:2;
+    opacity:.9;
+}
+
+.fade{
+    animation:fade .8s;
+}
+
+@keyframes fade{
+    from{opacity:0}
+    to{opacity:1}
 }
 </style>
 </head>
-
 <body>
-<div id="bg">
-  <div id="game">
-    <div id="story"></div>
-    <div id="choices"></div>
-    <div id="guide"></div>
-  </div>
+
+<div id="game">
+
+    <div id="titleScreen">
+        <div id="title">推しは今日も、嘘をつく。</div>
+        <div id="subtitle">コンカフェ嬢 攻略ADV</div>
+        <button onclick="startGame()">GAME START</button>
+    </div>
+
+    <div id="ui">
+        <div id="stats">
+            好感度：<span id="love">0</span><br>
+            依存度：<span id="depend">0</span><br>
+            現実性：<span id="reality">0</span>
+        </div>
+
+        <div id="textbox">
+            <div id="name"></div>
+            <div id="text"></div>
+            <div id="choices"></div>
+        </div>
+    </div>
+
+    <div id="ending">
+        <h1 id="endingTitle"></h1>
+        <p id="endingText"></p>
+        <br>
+        <button onclick="location.reload()">タイトルへ戻る</button>
+    </div>
+
 </div>
 
 <script>
-let quitOnce = false;
 
-/* ===== シーン定義 ===== */
-const scenes = {
-  0: {
-    text: "ホウカゴノ ガッコウ。\nダレモ イナイ。",
-    guide: "",
-    edgeGuide: false,
-    bg: "images/school.jpg",
-    choices: () => {
-      if (quitOnce) {
-        return [
-          { label: "ゲームを始める", next: 1 }
-        ];
-      }
-      return [
-        { label: "ゲームを始める", next: 1 },
-        { label: "ゲームをやめる", next: "quit" }
-      ];
-    }
-  },
+let love = 0;
+let depend = 0;
+let reality = 0;
 
-  1: {
-    text: "ホウカゴノ ガッコウ。\nナゼカ ダレモ イナイ。\nアタリハ ヒガ オチテキタ。",
-    guide: "センタクシヲ エラビ、\nゲームヲ ススメマショウ。",
-    edgeGuide: true,
-    bg: "images/school_evening.jpg",
-    choices: [
-      { label: "アタリヲ ミワタス", next: 2 }
-    ]
-  },
+const loveEl = document.getElementById("love");
+const dependEl = document.getElementById("depend");
+const realityEl = document.getElementById("reality");
 
-  2: {
-    text: "オクノ キョウシツカラ\nモノオトガ シタ。\nダレカ イルノダロウカ。\nノゾキニ イコウカナ。",
-    guide: "センタクシヲ エラビ、\nゲームヲ ススメマショウ。",
-    edgeGuide: true,
-    bg: "images/hallway.jpg",
-    choices: [
-      { label: "オクニ ススム", next: 3 }
-    ]
-  },
+const nameEl = document.getElementById("name");
+const textEl = document.getElementById("text");
+const choicesEl = document.getElementById("choices");
 
-  3: {
-    text: "……",
-    guide: "ヨク デキマシタ。",
-    edgeGuide: false,
-    bg: "images/dark.jpg",
-    choices: []
-  }
-};
+let currentScene = 0;
 
-/* ===== 表示処理 ===== */
-function showScene(id) {
-  const scene = scenes[id];
-  const bg = document.getElementById("bg");
-  const story = document.getElementById("story");
-  const guide = document.getElementById("guide");
-  const choicesDiv = document.getElementById("choices");
+const scenes = [
 
-  bg.style.backgroundImage = `url('${scene.bg}')`;
-  story.innerText = scene.text;
+{
+name:"リリア",
+text:"「はじめまして〜！新人のご主人様？」",
+choices:[
+{
+text:"おすすめのドリンクある？",
+effect:()=>{love+=1;},
+next:1
+},
+{
+text:"こういう店初めてで…",
+effect:()=>{love+=1; reality+=1;},
+next:1
+},
+{
+text:"君が一番人気？",
+effect:()=>{depend+=1;},
+next:1
+}
+]
+},
 
-  guide.innerText = scene.guide || "";
-  guide.className = scene.edgeGuide ? "edge" : "";
+{
+name:"",
+text:"深夜2:14\nリリアからDMが届いた。\n\n『今日会いたかったな』\n『次いつ来る？』",
+choices:[
+{
+text:"すぐ返信する",
+effect:()=>{depend+=2; love+=1;},
+next:2
+},
+{
+text:"朝まで待つ",
+effect:()=>{reality+=2;},
+next:2
+}
+]
+},
 
-  choicesDiv.innerHTML = "";
+{
+name:"常連客",
+text:"「リリアちゃん、みんなにああだから」",
+choices:[
+{
+text:"信じない",
+effect:()=>{depend+=2; love+=1;},
+next:3
+},
+{
+text:"気になる",
+effect:()=>{reality+=2;},
+next:3
+},
+{
+text:"イライラする",
+effect:()=>{depend+=3;},
+next:3
+}
+]
+},
 
-  const choices =
-    typeof scene.choices === "function"
-      ? scene.choices()
-      : scene.choices;
+{
+name:"リリア",
+text:"「ねぇ、ご主人様。リリアのこと、本当に好き？」",
+choices:[
+{
+text:"もちろん",
+effect:()=>{love+=2; depend+=2;},
+next:4
+},
+{
+text:"少し距離を考えたい",
+effect:()=>{reality+=3;},
+next:4
+},
+{
+text:"他の客にも言ってる？",
+effect:()=>{depend+=1;},
+next:4
+}
+]
+},
 
-  choices.forEach(c => {
-    const btn = document.createElement("button");
-    btn.innerText = c.label;
-    btn.onclick = () => {
-      if (c.next === "quit") {
-        quitOnce = true;
-        bg.classList.add("fade");
-        setTimeout(() => {
-          bg.classList.remove("fade");
-          showScene(0);
-        }, 1500);
-      } else {
-        showScene(c.next);
-      }
-    };
-    choicesDiv.appendChild(btn);
-  });
+{
+name:"",
+text:"あなたは、何を選ぶ？",
+choices:[
+{
+text:"毎週通い続ける",
+effect:()=>{depend+=3; love+=2;},
+ending:true
+},
+{
+text:"店で感情をぶつける",
+effect:()=>{depend+=4;},
+ending:true
+},
+{
+text:"少しずつ店から離れる",
+effect:()=>{reality+=4;},
+ending:true
+}
+]
 }
 
-/* ===== 開始 ===== */
-showScene(0);
+];
+
+function startGame(){
+    document.getElementById("titleScreen").style.display="none";
+    document.getElementById("ui").style.display="block";
+    showScene();
+}
+
+function updateStats(){
+    loveEl.textContent = love;
+    dependEl.textContent = depend;
+    realityEl.textContent = reality;
+}
+
+function showScene(){
+
+    const scene = scenes[currentScene];
+
+    nameEl.textContent = scene.name;
+    textEl.textContent = scene.text;
+
+    choicesEl.innerHTML = "";
+
+    scene.choices.forEach(choice=>{
+
+        const btn = document.createElement("button");
+        btn.className = "choice fade";
+        btn.textContent = choice.text;
+
+        btn.onclick = ()=>{
+
+            choice.effect();
+
+            updateStats();
+
+            if(choice.ending){
+                determineEnding();
+            }else{
+                currentScene = choice.next;
+                showScene();
+            }
+
+        };
+
+        choicesEl.appendChild(btn);
+
+    });
+
+}
+
+function determineEnding(){
+
+    document.getElementById("ui").style.display="none";
+    document.getElementById("ending").style.display="flex";
+
+    const title = document.getElementById("endingTitle");
+    const text = document.getElementById("endingText");
+
+    // TRUE END
+    if(reality >= 7){
+
+        title.textContent = "END『午前4時の改札』";
+
+        text.textContent =
+`閉店後の駅。
+
+「最近来る回数、減ったよね」
+
+リリアは少し寂しそうに笑った。
+
+あなたは彼女を“推し”ではなく、
+一人の人間として見ることにした。
+
+電車のドアが閉まる。
+
+窓越しに見えた彼女は、
+店の衣装ではなく、
+ただの女の子だった。`;
+
+    }
+
+    // BAD END
+    else if(depend >= 8 && love <= 3){
+
+        title.textContent = "END『次の推しへ』";
+
+        text.textContent =
+`店内で感情を爆発させたあなたは、
+出禁になった。
+
+SNSには、
+『怖い人っているんだね』
+というリリアの投稿。
+
+ネオン街を歩きながら、
+あなたはまた別の“特別”を探し始める。`;
+
+    }
+
+    // HAPPY? END
+    else{
+
+        title.textContent = "END『鎖越しの愛』";
+
+        text.textContent =
+`「もう、他の人のところ行かないで」
+
+リリアはあなたの首に
+お揃いのチョーカーをつける。
+
+大学も仕事も、
+少しずつ遠くなった。
+
+でも、
+彼女が笑うたび、
+あなたは幸せだった。`;
+
+    }
+
+}
+
+updateStats();
+
 </script>
 </body>
 </html>
