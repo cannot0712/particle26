@@ -2,317 +2,156 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>推しは今日も、嘘をつく。</title>
-
+<title>放課後の学校</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-    background:black;
-    color:white;
-    font-family:"Yu Gothic",sans-serif;
-    overflow:hidden;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: "Yu Gothic", sans-serif;
 }
 
-#game{
-    width:100vw;
-    height:100vh;
-    position:relative;
+#game {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(#1b1b2f, #162447);
+  color: white;
+  position: relative;
 }
 
-/* 背景 */
-#background{
-    position:absolute;
-    inset:0;
-    background-size:cover;
-    background-position:center;
-    filter:brightness(.45);
-    transition:1s;
+#textBox {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.7);
+  padding: 20px;
+  box-sizing: border-box;
 }
 
-/* 暗幕 */
-#overlay{
-    position:absolute;
-    inset:0;
-    background:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.85));
+#name {
+  font-weight: bold;
+  margin-bottom: 10px;
 }
 
-/* タイトル */
-#titleScreen{
-    position:absolute;
-    inset:0;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    background:black;
-    z-index:10;
+#choices {
+  margin-top: 15px;
 }
 
-#title{
-    font-size:56px;
-    letter-spacing:4px;
-    margin-bottom:20px;
+button {
+  display: block;
+  margin: 8px 0;
+  padding: 10px;
+  width: 100%;
+  background: #e43f5a;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-#subtitle{
-    opacity:.7;
-    margin-bottom:40px;
-}
-
-button{
-    background:#ff4fa3;
-    border:none;
-    color:white;
-    padding:14px 30px;
-    border-radius:10px;
-    font-size:18px;
-    cursor:pointer;
-}
-
-button:hover{transform:scale(1.05);}
-
-/* UI */
-#ui{display:none;}
-
-#stats{
-    position:absolute;
-    top:15px;
-    left:15px;
-    background:rgba(0,0,0,.5);
-    padding:12px;
-    border-radius:10px;
-    line-height:1.8;
-    z-index:5;
-}
-
-/* テキスト */
-#textbox{
-    position:absolute;
-    bottom:0;
-    width:100%;
-    background:rgba(0,0,0,.85);
-    padding:28px;
-    z-index:5;
-}
-
-#name{
-    color:#ff7bc0;
-    font-weight:bold;
-    margin-bottom:10px;
-    font-size:22px;
-}
-
-#text{
-    min-height:140px;
-    line-height:2;
-    font-size:20px;
-    white-space:pre-wrap;
-    cursor:pointer;
-}
-
-#choices{
-    margin-top:20px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-
-.choice{
-    background:#1d1d1d;
-    border:1px solid #ff4fa3;
-    text-align:left;
-}
-
-/* END */
-#ending{
-    position:absolute;
-    inset:0;
-    background:black;
-    display:none;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    text-align:center;
-    padding:40px;
-    z-index:20;
-}
-
-#ending h1{
-    color:#ff7bc0;
-    font-size:48px;
-    margin-bottom:25px;
+button:hover {
+  background: #f95959;
 }
 </style>
 </head>
-
 <body>
+
 <div id="game">
-    <div id="background"></div>
-    <div id="overlay"></div>
-
-    <div id="titleScreen">
-        <div id="title">推しは今日も、嘘をつく。</div>
-        <div id="subtitle">コンカフェ嬢攻略ADV</div>
-        <button onclick="startGame()">GAME START</button>
-    </div>
-
-    <div id="ui">
-        <div id="stats">
-            好感度：<span id="love">0</span><br>
-            依存度：<span id="depend">0</span><br>
-            現実性：<span id="reality">0</span>
-        </div>
-
-        <div id="textbox">
-            <div id="name"></div>
-            <div id="text"></div>
-            <div id="choices"></div>
-        </div>
-    </div>
-
-    <div id="ending">
-        <h1 id="endingTitle"></h1>
-        <p id="endingText"></p><br><br>
-        <button onclick="location.reload()">タイトルへ戻る</button>
-    </div>
+  <div id="textBox">
+    <div id="name"></div>
+    <div id="text"></div>
+    <div id="choices"></div>
+  </div>
 </div>
 
 <script>
-/* ステータス */
-let love=0, depend=0, reality=0;
-let sceneIndex=0, pageIndex=0;
+let affection = 0;
 
-/* 背景 */
-const backgrounds={
-    street:"3E5432C3-2703-472D-B465-6F16FEE1B8F5.jpeg",
-    cafe:"E7514306-6E15-4518-9346-DA02725635F8.png",
-    night:"828769FF-5428-48F6-9EF8-B424A98445AC.jpeg",
-    station:"5E45E54D-328D-4FAE-A4C2-357E2329C720.jpeg",
-    room:"FCE43578-31A9-4071-8292-6718C43EF5F1.jpeg"
+const scenes = {
+  start: {
+    name: "",
+    text: "放課後の学校。なぜか誰もいない。",
+    choices: [
+      { text: "教室に入る", next: "classroom" },
+      { text: "帰る", next: "end" }
+    ]
+  },
+
+  classroom: {
+    name: "リリア",
+    text: "……来ちゃったんだ。",
+    choices: [
+      { text: "声をかける", affection: +1, next: "talk" },
+      { text: "黙って様子を見る", affection: -1, next: "talk" }
+    ]
+  },
+
+  talk: {
+    name: "リリア",
+    text: () => {
+      if (affection >= 1) return "少し安心した顔で、こちらを見る。";
+      return "警戒した目で距離を取っている。";
+    },
+    choices: [
+      { text: "「大丈夫？」と聞く", affection: +1, next: "truth" },
+      { text: "何も言わない", next: "truth" }
+    ]
+  },
+
+  truth: {
+    name: "リリア",
+    text: () => {
+      if (affection >= 2) return "……ねえ。私、嘘ついてた。";
+      return "用がないなら、帰って。";
+    },
+    choices: [
+      { text: "話を聞く", next: "goodEnd" },
+      { text: "立ち去る", next: "badEnd" }
+    ]
+  },
+
+  goodEnd: {
+    name: "",
+    text: "夕焼けの校舎で、二人だけの秘密が始まった。",
+    choices: []
+  },
+
+  badEnd: {
+    name: "",
+    text: "その日以来、彼女を見ることはなかった。",
+    choices: []
+  },
+
+  end: {
+    name: "",
+    text: "あなたは何も知らずに家へ帰った。",
+    choices: []
+  }
 };
 
-/* シーン */
-const scenes=[
-{
-bg:"street",
-pages:[
-{text:"放課後の繁華街。\n\n少しだけ、寄り道するつもりだった。"},
-{name:"リリア",text:"「はじめまして〜♡ ご主人様？」"}
-],
-choices:[
-{text:"おすすめ聞く",effect:()=>love++},
-{text:"初めてで…",effect:()=>{love++;reality++;}},
-{text:"人気ある？",effect:()=>depend++}
-]
-},
-{
-bg:"cafe",
-pages:[
-{name:"",text:"距離が近い。"},
-{name:"リリア",text:"「緊張してる？ かわい〜♡」"}
-],
-choices:[
-{text:"照れる",effect:()=>love++},
-{text:"営業だね",effect:()=>reality++},
-{text:"ドキッとする",effect:()=>depend++}
-]
-},
-{
-bg:"night",
-pages:[
-{name:"",text:"夜。\nスマホが震えた。"},
-{name:"リリア",text:"『また来てね♡』"}
-],
-choices:[
-{text:"すぐ返す",effect:()=>depend+=2},
-{text:"少し待つ",effect:()=>reality++}
-]
-},
-{
-bg:"station",
-pages:[
-{name:"リリア",text:"「最近、来ないね？」"},
-{name:"",text:"少し、疲れている自分に気づいた。"}
-],
-choices:[
-{text:"ごめん",effect:()=>love++},
-{text:"距離を置く",effect:()=>reality+=3},
-{text:"寂しかった",effect:()=>depend+=2}
-]
-}
-];
+function showScene(key) {
+  const scene = scenes[key];
+  document.getElementById("name").textContent = scene.name;
+  document.getElementById("text").textContent =
+    typeof scene.text === "function" ? scene.text() : scene.text;
 
-/* 開始 */
-function startGame(){
-    titleScreen.style.display="none";
-    ui.style.display="block";
-    showScene();
-}
+  const choicesDiv = document.getElementById("choices");
+  choicesDiv.innerHTML = "";
 
-/* 表示 */
-function showScene(){
-    const scene=scenes[sceneIndex];
-    background.style.backgroundImage=`url(${backgrounds[scene.bg]})`;
-    pageIndex=0;
-    showPage();
-}
-
-function showPage(){
-    const scene=scenes[sceneIndex];
-    const page=scene.pages[pageIndex];
-    name.textContent=page.name||"";
-    text.textContent=page.text;
-    choices.innerHTML="";
-    text.onclick=()=>{
-        pageIndex++;
-        if(pageIndex>=scene.pages.length){
-            text.onclick=null;
-            showChoices();
-        }else{
-            showPage();
-        }
+  scene.choices.forEach(c => {
+    const btn = document.createElement("button");
+    btn.textContent = c.text;
+    btn.onclick = () => {
+      if (c.affection) affection += c.affection;
+      showScene(c.next);
     };
+    choicesDiv.appendChild(btn);
+  });
 }
 
-function showChoices(){
-    scenes[sceneIndex].choices.forEach(c=>{
-        const b=document.createElement("button");
-        b.className="choice";
-        b.textContent=c.text;
-        b.onclick=()=>{
-            c.effect();
-            updateStats();
-            sceneIndex++;
-            if(sceneIndex>=scenes.length) endGame();
-            else showScene();
-        };
-        choices.appendChild(b);
-    });
-}
-
-function updateStats(){
-    love.textContent=love;
-    depend.textContent=depend;
-    reality.textContent=reality;
-}
-
-function endGame(){
-    ui.style.display="none";
-    ending.style.display="flex";
-
-    if(reality>=5){
-        endingTitle.textContent="END『現実へ』";
-        endingText.textContent="あなたは、自分の生活へ戻った。";
-    }else if(depend>=5){
-        endingTitle.textContent="END『沼』";
-        endingText.textContent="気づけば、抜け出せなくなっていた。";
-    }else{
-        endingTitle.textContent="END『余韻』";
-        endingText.textContent="少し甘い思い出だけが残った。";
-    }
-}
+showScene("start");
 </script>
+
 </body>
 </html>
