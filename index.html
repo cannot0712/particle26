@@ -2,156 +2,269 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>放課後の学校</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推しは今日も、嘘をつく。</title>
+
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  font-family: "Yu Gothic", sans-serif;
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:black;color:white;font-family:"Yu Gothic",sans-serif;overflow:hidden;}
+#game{width:100vw;height:100vh;position:relative;}
+
+#bg{
+    position:absolute;inset:0;
+    background-size:cover;
+    background-position:center;
+    filter:brightness(.45);
+    transition:1s;
+}
+#overlay{
+    position:absolute;inset:0;
+    background:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.85));
 }
 
-#game {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(#1b1b2f, #162447);
-  color: white;
-  position: relative;
+#title{
+    position:absolute;inset:0;
+    display:flex;flex-direction:column;
+    justify-content:center;align-items:center;
+    background:black;z-index:10;
+}
+#title h1{font-size:56px;margin-bottom:20px;}
+#title p{opacity:.7;margin-bottom:40px;}
+
+button{
+    background:#ff4fa3;color:white;border:none;
+    padding:14px 30px;border-radius:10px;
+    font-size:18px;cursor:pointer;
 }
 
-#textBox {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  background: rgba(0,0,0,0.7);
-  padding: 20px;
-  box-sizing: border-box;
+#ui{display:none;}
+#stats{
+    position:absolute;top:15px;left:15px;
+    background:rgba(0,0,0,.5);
+    padding:12px;border-radius:10px;
+    line-height:1.8;
 }
+#box{
+    position:absolute;bottom:0;width:100%;
+    background:rgba(0,0,0,.85);
+    padding:28px;
+}
+#name{color:#ff7bc0;font-weight:bold;margin-bottom:10px;font-size:22px;}
+#text{min-height:140px;font-size:20px;line-height:2;white-space:pre-wrap;cursor:pointer;}
+#choices{margin-top:20px;display:flex;flex-direction:column;gap:10px;}
+.choice{background:#1d1d1d;border:1px solid #ff4fa3;text-align:left;}
 
-#name {
-  font-weight: bold;
-  margin-bottom: 10px;
+#end{
+    position:absolute;inset:0;background:black;
+    display:none;flex-direction:column;
+    justify-content:center;align-items:center;
+    text-align:center;padding:40px;
 }
-
-#choices {
-  margin-top: 15px;
-}
-
-button {
-  display: block;
-  margin: 8px 0;
-  padding: 10px;
-  width: 100%;
-  background: #e43f5a;
-  border: none;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #f95959;
-}
+#end h1{color:#ff7bc0;font-size:48px;margin-bottom:25px;}
 </style>
 </head>
-<body>
 
+<body>
 <div id="game">
-  <div id="textBox">
-    <div id="name"></div>
-    <div id="text"></div>
-    <div id="choices"></div>
-  </div>
+    <div id="bg"></div>
+    <div id="overlay"></div>
+
+    <div id="title">
+        <h1>推しは今日も、嘘をつく。</h1>
+        <p>コンカフェ嬢ADV</p>
+        <button onclick="start()">GAME START</button>
+    </div>
+
+    <div id="ui">
+        <div id="stats">
+            好感度：<span id="love">0</span><br>
+            依存度：<span id="depend">0</span><br>
+            現実性：<span id="reality">0</span>
+        </div>
+
+        <div id="box">
+            <div id="name"></div>
+            <div id="text"></div>
+            <div id="choices"></div>
+        </div>
+    </div>
+
+    <div id="end">
+        <h1 id="endTitle"></h1>
+        <p id="endText"></p><br><br>
+        <button onclick="location.reload()">タイトルへ</button>
+    </div>
 </div>
 
 <script>
-let affection = 0;
+/* ===== 状態 ===== */
+let love=0, depend=0, reality=0;
+let s=0, p=0;
 
-const scenes = {
-  start: {
-    name: "",
-    text: "放課後の学校。なぜか誰もいない。",
-    choices: [
-      { text: "教室に入る", next: "classroom" },
-      { text: "帰る", next: "end" }
-    ]
-  },
-
-  classroom: {
-    name: "リリア",
-    text: "……来ちゃったんだ。",
-    choices: [
-      { text: "声をかける", affection: +1, next: "talk" },
-      { text: "黙って様子を見る", affection: -1, next: "talk" }
-    ]
-  },
-
-  talk: {
-    name: "リリア",
-    text: () => {
-      if (affection >= 1) return "少し安心した顔で、こちらを見る。";
-      return "警戒した目で距離を取っている。";
-    },
-    choices: [
-      { text: "「大丈夫？」と聞く", affection: +1, next: "truth" },
-      { text: "何も言わない", next: "truth" }
-    ]
-  },
-
-  truth: {
-    name: "リリア",
-    text: () => {
-      if (affection >= 2) return "……ねえ。私、嘘ついてた。";
-      return "用がないなら、帰って。";
-    },
-    choices: [
-      { text: "話を聞く", next: "goodEnd" },
-      { text: "立ち去る", next: "badEnd" }
-    ]
-  },
-
-  goodEnd: {
-    name: "",
-    text: "夕焼けの校舎で、二人だけの秘密が始まった。",
-    choices: []
-  },
-
-  badEnd: {
-    name: "",
-    text: "その日以来、彼女を見ることはなかった。",
-    choices: []
-  },
-
-  end: {
-    name: "",
-    text: "あなたは何も知らずに家へ帰った。",
-    choices: []
-  }
+/* ===== 背景 ===== */
+const bgm={
+    street:"3E5432C3-2703-472D-B465-6F16FEE1B8F5.jpeg",
+    cafe:"E7514306-6E15-4518-9346-DA02725635F8.png",
+    night:"828769FF-5428-48F6-9EF8-B424A98445AC.jpeg",
+    station:"5E45E54D-328D-4FAE-A4C2-357E2329C720.jpeg",
+    room:"FCE43578-31A9-4071-8292-6718C43EF5F1.jpeg"
 };
 
-function showScene(key) {
-  const scene = scenes[key];
-  document.getElementById("name").textContent = scene.name;
-  document.getElementById("text").textContent =
-    typeof scene.text === "function" ? scene.text() : scene.text;
+/* ===== シーン ===== */
+const scenes=[
+{
+bg:"street",
+pages:[
+{text:"放課後の繁華街。\n少しだけ、寄り道するつもりだった。"},
+{
+name:"リリア",
+text:()=> "「はじめまして〜♡ ご主人様？」"
+}
+],
+choices:[
+{text:"店に入る",effect:()=>love++},
+{text:"様子を見る",effect:()=>reality++}
+]
+},
+{
+bg:"cafe",
+pages:[
+{
+name:"リリア",
+text:()=>{
+if(depend>=3) return "「また来てくれたんだ♡」";
+if(reality>=3) return "「無理してない？」";
+return "「いらっしゃいませ〜♡」";
+}
+},
+{text:"距離が近い。これは、仕事だ。"}
+],
+choices:[
+{text:"照れる",effect:()=>love++},
+{text:"冷静になる",effect:()=>reality++},
+{text:"ドキドキする",effect:()=>depend++}
+]
+},
+{
+bg:"night",
+pages:[
+{
+name:"リリア",
+text:()=>{
+if(depend>=4) return "『今なにしてるの？♡』";
+if(reality>=4) return "『遅いから無理しないでね』";
+return "『今日はありがとう♡』";
+}
+}
+],
+choices:[
+{text:"すぐ返す",effect:()=>depend+=2},
+{text:"少し待つ",effect:()=>reality++}
+]
+},
+{
+bg:"room",
+pages:[
+{
+text:()=>{
+if(depend>=5) return "スマホを握ったまま、眠れなかった。";
+if(reality>=5) return "少し、距離を置くべきかもしれない。";
+return "ベッドに沈み込む。";
+}
+}
+],
+choices:[
+{text:"考えない",effect:()=>depend++},
+{text:"考える",effect:()=>reality+=2}
+]
+},
+{
+bg:"station",
+pages:[
+{
+name:"リリア",
+text:()=>{
+if(depend>=6) return "「ねえ…私だけ見てくれる？」";
+if(reality>=6) return "「自分の生活も大事にしてね」";
+return "「また、会えるよね？」";
+}
+}
+],
+choices:[
+{text:"うなずく",effect:()=>depend+=2},
+{text:"距離を取る",effect:()=>reality+=3}
+]
+}
+];
 
-  const choicesDiv = document.getElementById("choices");
-  choicesDiv.innerHTML = "";
-
-  scene.choices.forEach(c => {
-    const btn = document.createElement("button");
-    btn.textContent = c.text;
-    btn.onclick = () => {
-      if (c.affection) affection += c.affection;
-      showScene(c.next);
-    };
-    choicesDiv.appendChild(btn);
-  });
+/* ===== 開始 ===== */
+function start(){
+    title.style.display="none";
+    ui.style.display="block";
+    drawScene();
 }
 
-showScene("start");
-</script>
+/* ===== 描画 ===== */
+function drawScene(){
+    const sc=scenes[s];
+    bg.style.backgroundImage=`url(${bgm[sc.bg]})`;
+    p=0;
+    drawPage();
+}
 
+function drawPage(){
+    const page=scenes[s].pages[p];
+    name.textContent=page.name||"";
+    const msg=typeof page.text==="function"?page.text():page.text;
+    text.textContent=msg;
+    choices.innerHTML="";
+    text.onclick=()=>{
+        p++;
+        if(p>=scenes[s].pages.length){
+            text.onclick=null;
+            drawChoices();
+        }else drawPage();
+    };
+}
+
+function drawChoices(){
+    scenes[s].choices.forEach(c=>{
+        const b=document.createElement("button");
+        b.className="choice";
+        b.textContent=c.text;
+        b.onclick=()=>{
+            c.effect();
+            update();
+            s++;
+            if(s>=scenes.length) ending();
+            else drawScene();
+        };
+        choices.appendChild(b);
+    });
+}
+
+function update(){
+    love.textContent=love;
+    depend.textContent=depend;
+    reality.textContent=reality;
+}
+
+/* ===== END ===== */
+function ending(){
+    ui.style.display="none";
+    end.style.display="flex";
+
+    if(reality>=8){
+        endTitle.textContent="END：現実";
+        endText.textContent="あなたは、ちゃんと自分の生活に戻った。";
+    }else if(depend>=8){
+        endTitle.textContent="END：依存";
+        endText.textContent="彼女の言葉だけが、世界になった。";
+    }else{
+        endTitle.textContent="END：余韻";
+        endText.textContent="少し甘い記憶だけが残った。";
+    }
+}
+</script>
 </body>
 </html>
